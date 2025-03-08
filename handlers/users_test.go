@@ -7,16 +7,10 @@ import (
 	"testing"
 )
 
-type Mock struct{}
-
-func (in *Mock) Registration(c *fiber.Ctx) error {
-	return c.SendString("Registration successful")
-}
-
 func TestRegistration(t *testing.T) {
 	app := fiber.New()
 
-	handler := &Mock{}
+	handler := &InHandlers{}
 	app.Post("/register", handler.Registration)
 
 	req := httptest.NewRequest("POST", "/register", nil)
