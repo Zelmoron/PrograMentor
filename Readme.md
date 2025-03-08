@@ -1,4 +1,1 @@
-
-
-[![codecov](https://codecov.io/gh/Zelmoron/PrograMentor/branch/main/graph/badge.svg)](https://codecov.io/gh/Zelmoron/PrograMentor)
-
+![Codecov](https://img.shields.io/codecov/c/github/Zelmoron/PrograMentor.svg)
