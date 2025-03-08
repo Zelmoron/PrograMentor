@@ -1,4 +1,4 @@
-package tests
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -7,9 +7,10 @@ import (
 	"testing"
 )
 
-type InHandlers struct{}
+type Mock struct {
+}
 
-func (in *InHandlers) Registration(c *fiber.Ctx) error {
+func (in *Mock) Registration(c *fiber.Ctx) error {
 	return nil
 }
 
@@ -17,7 +18,7 @@ func TestRegistration(t *testing.T) {
 
 	app := fiber.New()
 
-	handler := &InHandlers{}
+	handler := &Mock{}
 	app.Post("/register", handler.Registration)
 
 	req := httptest.NewRequest("POST", "/register", nil)
