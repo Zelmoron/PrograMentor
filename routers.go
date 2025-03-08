@@ -9,4 +9,10 @@ import (
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
 	app.Get("/", func(c *fiber.Ctx) error { return c.JSON(os.Getenv("APP_VERSION")) })
 
+	//Without autification
+	api := app.Group("")
+
+	api.Post("/registration", in.Registration)
+	api.Post("/auth", in.Login)
+
 }
