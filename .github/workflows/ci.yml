@@ -11,7 +11,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -24,7 +23,7 @@ jobs:
         run: go mod tidy
 
       - name: Run tests
-        run: go test -coverprofile=coverage.txt
+        run: go test -coverprofile=coverage.txt -coverpkg=./handlers
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
