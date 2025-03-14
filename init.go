@@ -1,8 +1,14 @@
 package main
 
-// TODO
-// Этот файл оставлю тебе, так как ты , скорее всего, пишешь го код в vs code - тебе придется создать читателя env файла
-// Мне эта штука не нужна
+import (
+	"log"
+
+	"github.com/joho/godotenv"
+)
+
 func init() {
-	//TODO
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Ошибка при загрузке файла .env:", err)
+	}
 }
