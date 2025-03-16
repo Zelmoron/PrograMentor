@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"main/handlers"
 	"os"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
