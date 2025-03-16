@@ -12,7 +12,6 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	//Without autification
 	api := app.Group("")
 
-	api.Post("/registration", in.Registration)
 	api.Post("/auth", in.Login)
 
 }
