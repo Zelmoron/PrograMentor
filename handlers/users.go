@@ -15,9 +15,7 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 	}
 
 	if err := c.BodyParser(&credentials); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return err
 	}
 
 	user, err := in.repos.UsersRepo.GetUserByUsername(credentials.Username)
