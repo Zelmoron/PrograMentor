@@ -6,6 +6,7 @@ from keyboards.keyboards import get_main_keyboard
 from db.db_connect import setup_database_connection
 from utils.logging import logger
 from utils.validation import validate_nickname
+from datetime import datetime
 import hashlib
 
 
@@ -39,7 +40,7 @@ async def register_callback(message: Message, state: FSMContext):
         tg_user_id = message.from_user.id
 
         # Проверка наличия пользователя в базе данных
-        cursor.execute("SELECT COUNT(*) FROM tg_users WHERE tg_id = %s", (tg_user_id,))
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = %s", (tg_user_id,))
         count = cursor.fetchone()[0]
 
         if count != 0:
@@ -64,7 +65,7 @@ async def handle_nickname(message: Message, state: FSMContext):
     if validate_nickname(nickname):
         try:
             # Проверка наличия никнейма в базе данных
-            cursor.execute("SELECT COUNT(*) FROM users_info WHERE nickname = %s", (nickname,))
+            cursor.execute("SELECT COUNT(*) FROM users WHERE username = %s", (nickname,))
             count = cursor.fetchone()[0]
 
             if count != 0:
@@ -94,9 +95,9 @@ async def handle_password(message: Message, state: FSMContext):
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         # Добавление пользователя в базу данных
-        cursor.execute("INSERT INTO tg_users (tg_id) VALUES (%s)", (message.from_user.id,))
-        cursor.execute("INSERT INTO users_info (tg_id, nickname, password) VALUES ((SELECT id FROM tg_users WHERE tg_id = %s), %s, %s)",
-                       (message.from_user.id, nickname, hashed_password))
+        date = datetime.now()
+        cursor.execute("INSERT INTO users (id, username, password, created_at, updated_at) VALUES (%s, %s, %s, %s, %s)", 
+                       (message.from_user.id, nickname, hashed_password, date, date))
         connection.commit()
 
         await message.reply(
@@ -113,7 +114,7 @@ async def change_nickname_callback(message: Message, state: FSMContext):
     """Обработка изменения никнейма"""
     try:
         # Проверка наличия пользователя в базе данных
-        cursor.execute("SELECT COUNT(*) FROM tg_users WHERE tg_id = %s", (message.from_user.id,))
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = %s", (message.from_user.id,))
         count = cursor.fetchone()[0]
 
         if count != 0:
@@ -133,7 +134,7 @@ async def handle_change_nickname(message: Message, state: FSMContext):
 
         if validate_nickname(new_nickname):
             # Проверка наличия нового никнейма в базе данных
-            cursor.execute("SELECT COUNT(*) FROM users_info WHERE nickname = %s", (new_nickname,))
+            cursor.execute("SELECT COUNT(*) FROM users WHERE username = %s", (new_nickname,))
             count = cursor.fetchone()[0]
 
             if count != 0:
@@ -141,8 +142,7 @@ async def handle_change_nickname(message: Message, state: FSMContext):
                 await state.set_state(RegistrationForm.change_nickname)
             else:
                 # Обновление никнейма в базе данных
-                cursor.execute("UPDATE users_info SET nickname = %s WHERE tg_id = (SELECT id FROM tg_users WHERE tg_id = %s)",
-                               (new_nickname, message.from_user.id))
+                cursor.execute("UPDATE users SET username = %s, updated_at = %s WHERE id = %s", (new_nickname, datetime.now(), message.from_user.id))
                 connection.commit()
                 await message.answer(
                     f'Ваш никнейм изменён на: {new_nickname}',
@@ -161,7 +161,7 @@ async def change_password_callback(message: Message, state: FSMContext):
     """Обработка изменения пароля"""
     try:
         # Проверка наличия пользователя в базе данных
-        cursor.execute("SELECT COUNT(*) FROM tg_users WHERE tg_id = %s", (message.from_user.id,))
+        cursor.execute("SELECT COUNT(*) FROM users WHERE id = %s", (message.from_user.id,))
         count = cursor.fetchone()[0]
 
         if count != 0:
@@ -183,8 +183,7 @@ async def handle_change_password(message: Message, state: FSMContext):
         hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
 
         # Обновление пароля в базе данных
-        cursor.execute("UPDATE users_info SET password = %s WHERE tg_id = (SELECT id FROM tg_users WHERE tg_id = %s)",
-                       (hashed_password, message.from_user.id))
+        cursor.execute("UPDATE users SET password = %s, updated_at = %s WHERE id = %s", (hashed_password, datetime.now(), message.from_user.id))
         connection.commit()
         await message.answer(
             f'Ваш пароль изменён.',
