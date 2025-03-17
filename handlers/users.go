@@ -3,10 +3,17 @@ package handlers
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"main/utils"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 )
+
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 func (in *InHandlers) Login(c *fiber.Ctx) error {
 	var credentials struct {
@@ -30,7 +37,31 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": "Login successful!",
+	accessToken, err := utils.GenerateJWT(user.ID, utils.GetJWTSecret())
+	if err != nil {
+		return err
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		fmt.Println("Error generating refresh token:", err)
+		return err
+	}
+
+	newRefreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		fmt.Println("Error generating refresh token:", err)
+		return err
+	}
+
+	err = in.users.SaveRefreshToken(user.ID, refreshToken)
+	if err != nil {
+		fmt.Println("Error saving refresh token:", err)
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
 	})
 }
