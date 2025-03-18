@@ -41,8 +41,22 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"token":        token,
-		"refreshToken": refreshToken,
+	c.Cookie(&fiber.Cookie{
+		Name:     "accessToken",
+		Value:    token,
+		HTTPOnly: false,
+		Secure:   false,
+		SameSite: "None",
 	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refreshToken",
+		Value:    refreshToken,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "None",
+	})
+
+	c.Status(http.StatusOK)
+	return nil
 }

@@ -1,12 +1,15 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
-	"main/domain"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"main/domain"
+	"main/utils"
 )
 
 type Repo struct {
@@ -61,15 +64,17 @@ func (repo *Repo) SaveRefreshToken(userID int64, refreshToken string) error {
 }
 
 func (repo *Repo) GetUserIDByRefreshToken(refreshToken string) (int64, error) {
-	var refreshTokenRecord domain.RefreshToken
-	result := repo.db.Where("Token = ?", refreshToken).First(&refreshTokenRecord)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return 0, fmt.Errorf("refresh token not found")
-		}
-		return 0, result.Error
+	claims, err := utils.ParseRefreshToken(refreshToken)
+	if err != nil {
+		return 0, err
 	}
-	return refreshTokenRecord.UserID, nil
+
+	userID, ok := claims["sub"].(int64)
+	if !ok {
+		return 0, errors.New("invalid token claims")
+	}
+
+	return userID, nil
 }
 
 func (repo *Repo) DeleteRefreshToken(refreshToken string) error {

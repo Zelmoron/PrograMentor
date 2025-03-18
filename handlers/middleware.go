@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"main/services"
-	"main/utils"
 	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+
+	"main/services"
+	"main/utils"
 )
 
 func authMiddleware(secretKey string) fiber.Handler {

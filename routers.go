@@ -1,10 +1,11 @@
 package main
 
 import (
-	"main/handlers"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+
+	"main/handlers"
 )
 
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
@@ -13,20 +14,20 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	//Without autification
 	api := app.Group("")
 	api.Post("/auth", in.Login)
-
-	protected := api.Group("")
-	protected.Use(handlers.JWT(out.GetUsers()))
-
-	//Здесь защищённые маршруты
-	protected.Get("/protected", func(c *fiber.Ctx) error {
+	api.Post("/refresh-token", func(c *fiber.Ctx) error {
+		// Здесь должен быть реальный код для обновления токена
 		return c.JSON(fiber.Map{
-			"message": "Hello, authenticated user",
+			"message": "Token refreshed",
 		})
 	})
 
-	api.Post("/refresh-token", func(c *fiber.Ctx) error {
+	protected := api.Group("/protected")
+	protected.Use(handlers.JWT(out.GetUsers()))
+
+	// Маршруты, требующие аутентификации
+	protected.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"message": "Token refreshed",
+			"message": "Hello, authenticated user",
 		})
 	})
 }
