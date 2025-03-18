@@ -1,13 +1,17 @@
 package handlers
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"main/utils"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+
+	"main/services"
+	"main/utils"
 )
+
+type AuuthData struct {
+	UserID int64
+}
 
 func (in *InHandlers) Login(c *fiber.Ctx) error {
 	var credentials struct {
@@ -24,19 +28,28 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	userHash := sha256.Sum256([]byte(credentials.Password))
-	if hex.EncodeToString(userHash[:]) != user.Password {
+	if !services.VerifyPassword(credentials.Password, user.Password) {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Invalid password",
 		})
 	}
 
-	token, err := utils.GenerateJWT(user.ID)
+	c.Locals("authData", AuuthData{
+		UserID: user.ID,
+	})
+
+	return c.Next()
+}
+
+func (out *OutHandlers) LoginOut(c *fiber.Ctx) error {
+	authData, _ := c.Locals("authData").(AuuthData)
+
+	token, err := utils.GenerateJWT(authData.UserID)
 	if err != nil {
 		return err
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	refreshToken, err := utils.GenerateRefreshToken(authData.UserID)
 	if err != nil {
 		return err
 	}
@@ -57,6 +70,5 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		SameSite: "None",
 	})
 
-	c.Status(http.StatusOK)
-	return nil
+	return c.SendStatus(fiber.StatusOK)
 }
