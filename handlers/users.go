@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"main/utils"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +31,18 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	token, err := utils.GenerateJWT(user.ID)
+	if err != nil {
+		return err
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		return err
+	}
+
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": "Login successful!",
+		"token":        token,
+		"refreshToken": refreshToken,
 	})
 }

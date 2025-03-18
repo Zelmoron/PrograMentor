@@ -16,6 +16,10 @@ type (
 	}
 )
 
+func (o *OutHandlers) GetUsers() *services.Users {
+	return o.users
+}
+
 func NewOutHandlers(
 	repos *repository.Repo,
 	users *services.Users,
