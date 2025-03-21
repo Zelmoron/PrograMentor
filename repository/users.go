@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"main/domain"
-
 	"gorm.io/gorm"
+
+	"main/domain"
 )
 
 type UsersRepo struct {
