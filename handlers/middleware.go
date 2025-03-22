@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"main/services"
 	"main/utils"
 )
 
@@ -40,10 +39,6 @@ func authMiddleware(secretKey string) fiber.Handler {
 	}
 }
 
-func JWT(users *services.Users) fiber.Handler {
+func JWT() fiber.Handler {
 	return authMiddleware(os.Getenv("JWT_SECRET"))
-}
-
-func REFRESH(users *services.Users) fiber.Handler {
-	return authMiddleware(os.Getenv("REFRESH_SECRET"))
 }

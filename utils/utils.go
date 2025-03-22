@@ -30,6 +30,33 @@ func GenerateRefreshToken(userID int64) (string, error) {
 	return token.SignedString([]byte(os.Getenv("REFRESH_SECRET")))
 }
 
+func UpdateRefreshToken(refreshToken string, userID int64) (string, error) {
+	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("REFRESH_SECRET")), nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", fmt.Errorf("invalid token: %v", err)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", fmt.Errorf("invalid claims")
+	}
+
+	if int64(claims["exp"].(float64)) < time.Now().Unix() {
+		return GenerateRefreshToken(userID)
+	}
+
+	claims["exp"] = time.Now().Add(time.Hour * 24 * 30).Unix()
+
+	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return newToken.SignedString([]byte(os.Getenv("REFRESH_SECRET")))
+}
+
 func ValidateJWT(tokenString string, jwtSecret string) (int64, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
