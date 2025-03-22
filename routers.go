@@ -13,13 +13,11 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 
 	// Без аутентификации
 	api := app.Group("")
-	api.Post("/auth", in.Login)
+	api.Post("/auth", in.Login, out.LoginOut)
 	api.Post("/refresh-token", out.RefreshToken)
 
-	protected := api.Group("/protected")
-
-	// Обработчик для защищенного маршрута
-	protected.Get("/", handlers.JWT(out.GetUsers()), func(c *fiber.Ctx) error {
+	protected := api.Group("/protected", handlers.JWT())
+	protected.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "Hello, authenticated user",
 		})
