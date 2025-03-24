@@ -10,10 +10,6 @@ import (
 	"main/utils"
 )
 
-type AuthData struct {
-	UserID int64
-}
-
 func (in *InHandlers) Login(c *fiber.Ctx) error {
 	var credentials struct {
 		Username string `json:"username"`
@@ -33,16 +29,14 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	authData := AuthData{UserID: user.ID}
-
-	token, err := utils.GenerateJWT(authData.UserID)
+	token, err := utils.GenerateJWT(user.ID)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Could not generate access token",
 		})
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(authData.UserID)
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Could not generate refresh token",
@@ -77,21 +71,9 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 }
 
 func (out *OutHandlers) LoginOut(c *fiber.Ctx) error {
-	authData, _ := c.Locals("authData").(AuthData)
-
-	token, err := utils.GenerateJWT(authData.UserID)
-	if err != nil {
-		return err
-	}
-
-	refreshToken, err := utils.GenerateRefreshToken(authData.UserID)
-	if err != nil {
-		return err
-	}
-
 	c.Cookie(&fiber.Cookie{
 		Name:     "accessToken",
-		Value:    token,
+		Value:    "",
 		HTTPOnly: false,
 		Secure:   false,
 		SameSite: "None",
@@ -99,7 +81,7 @@ func (out *OutHandlers) LoginOut(c *fiber.Ctx) error {
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "refreshToken",
-		Value:    refreshToken,
+		Value:    "",
 		HTTPOnly: true,
 		Secure:   false,
 		SameSite: "None",
