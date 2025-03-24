@@ -1,12 +1,13 @@
 package main
 
 import (
-	"main/handlers"
-	"main/repository"
-	"main/services"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+
+	"main/handlers"
+	"main/repository"
+	"main/services"
 )
 
 func main() {
