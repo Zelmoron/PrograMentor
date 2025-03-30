@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -52,18 +53,20 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "accessToken",
 		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 100),
 		HTTPOnly: false,
 		Secure:   true,
-		SameSite: "Strict",
+		SameSite: "None",
 	})
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "refreshToken",
-		Value:    refreshToken,
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "Strict",
-	})
+	//c.Cookie(&fiber.Cookie{
+	//	Name:     "refreshToken",
+	//	Value:    refreshToken,
+	//	Expires:  time.Now().Add(time.Hour * 100 * 100),
+	//	HTTPOnly: true,
+	//	Secure:   false,
+	//	SameSite: "Lax",
+	//})
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Logged in successfully",
