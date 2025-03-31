@@ -22,5 +22,5 @@ jobs:
           port: 22
           script: |
             cd /home/igor/gobackend/PrograMentor && git pull origin main
-            docker compose down
-            docker compose up -d --build
+            /snap/bin/docker compose down
+            /snap/bin/docker compose up -d --build
