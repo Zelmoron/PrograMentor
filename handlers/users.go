@@ -49,13 +49,13 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 			"message": "Failed to save refresh token",
 		})
 	}
-
 	c.Cookie(&fiber.Cookie{
 		Name:     "accessToken",
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 100),
 		HTTPOnly: false,
-		Secure:   true,
+		Domain:   ".ngrok-free.app",
+		Secure:   false,
 		SameSite: "None",
 	})
 
