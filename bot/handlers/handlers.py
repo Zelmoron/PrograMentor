@@ -20,7 +20,6 @@ class RegistrationForm(StatesGroup):
     """Форма состояний при регистрации"""
     nickname = State()
     password = State()
-    change_nickname = State()
     change_password = State()
 
 
@@ -28,12 +27,12 @@ class RegistrationForm(StatesGroup):
 async def cmd_start(message: Message):
     """Обработка команды /start"""
     await message.answer(
-        'Добро пожаловать! Это бот проекта PrograMentor. Для действий используйте кнопки ниже.',
+        '👋 Добро пожаловать! Это бот проекта PrograMentor. Для действий используйте кнопки ниже.',
         reply_markup=get_main_keyboard()
     )
 
 
-@router.message(F.text == 'Зарегистрироваться')
+@router.message(F.text == '📝 Зарегистрироваться')
 async def register_callback(message: Message, state: FSMContext):
     """Обработка регистрации"""
     try:
@@ -44,11 +43,13 @@ async def register_callback(message: Message, state: FSMContext):
         count = cursor.fetchone()[0]
 
         if count != 0:
-            await message.answer('Вы уже зарегистрированы.')
+            await message.answer('⚠️ Вы уже зарегистрированы.')
         else:
             await message.answer(
-                'Введите ваш никнейм (8-15 символов).\nИспользуйте только латинские буквы (a-z, A-Z), '
-                'нижнее подчёркивание (_) и цифры (0-9).\nПример: <code>user_123</code>.',
+                '📝 Введите ваш никнейм (8-15 символов).\n'
+                'Используйте только латинские буквы (a-z, A-Z), '
+                'нижнее подчёркивание (_) и цифры (0-9).\n'
+                'Пример: <code>user_123</code>.',
                 parse_mode="HTML"
             )
             await state.set_state(RegistrationForm.nickname)
@@ -69,17 +70,17 @@ async def handle_nickname(message: Message, state: FSMContext):
             count = cursor.fetchone()[0]
 
             if count != 0:
-                await message.reply('Пользователь с таким никнеймом уже зарегистрирован.')
+                await message.reply('⚠️ Пользователь с таким никнеймом уже зарегистрирован.')
                 await state.set_state(RegistrationForm.nickname)
             else:
-                await message.reply('Никнейм принят.')
+                await message.reply('✅ Никнейм принят.')
                 await state.update_data(nickname=message.text)
-                await message.answer('Введите ваш пароль:')
+                await message.answer('🔑 Введите ваш пароль:')
                 await state.set_state(RegistrationForm.password)
         except Exception as e:
             logger.error(f'Произошла ошибка: {e}')
     else:
-        await message.reply('Никнейм не валиден. Пожалуйста, попробуйте снова.')
+        await message.reply('❌ Никнейм не валиден. Пожалуйста, попробуйте снова.')
         await state.set_state(RegistrationForm.nickname)
 
 
@@ -95,13 +96,12 @@ async def handle_password(message: Message, state: FSMContext):
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         # Добавление пользователя в базу данных
-        date = datetime.now()
-        cursor.execute("INSERT INTO users (id, username, password, created_at, updated_at) VALUES (%s, %s, %s, %s, %s)", 
-                       (message.from_user.id, nickname, hashed_password, date, date))
+        cursor.execute("INSERT INTO users (id, username, password) VALUES (%s, %s, %s)", 
+                       (message.from_user.id, nickname, hashed_password))
         connection.commit()
 
         await message.reply(
-            f'Регистрация завершена! Ваш пароль сохранен.',
+            f'🎉 Регистрация завершена! Ваш пароль сохранен.',
             reply_markup=get_main_keyboard()
         )
         await state.clear()
@@ -109,54 +109,7 @@ async def handle_password(message: Message, state: FSMContext):
         logger.error(f'Произошла ошибка при сохранении данных: {e}')
 
 
-@router.message(F.text == 'Изменить никнейм')
-async def change_nickname_callback(message: Message, state: FSMContext):
-    """Обработка изменения никнейма"""
-    try:
-        # Проверка наличия пользователя в базе данных
-        cursor.execute("SELECT COUNT(*) FROM users WHERE id = %s", (message.from_user.id,))
-        count = cursor.fetchone()[0]
-
-        if count != 0:
-            await message.answer('Введите новый никнейм:')
-            await state.set_state(RegistrationForm.change_nickname)
-        else:
-            await message.answer('Вы не зарегистрированы.', reply_markup=get_main_keyboard())
-    except Exception as e:
-        logger.error(f'Произошла ошибка: {e}')
-
-
-@router.message(RegistrationForm.change_nickname)
-async def handle_change_nickname(message: Message, state: FSMContext):
-    """Обработка нового никнейма"""
-    try:
-        new_nickname = message.text
-
-        if validate_nickname(new_nickname):
-            # Проверка наличия нового никнейма в базе данных
-            cursor.execute("SELECT COUNT(*) FROM users WHERE username = %s", (new_nickname,))
-            count = cursor.fetchone()[0]
-
-            if count != 0:
-                await message.reply('Пользователь с таким никнеймом уже зарегистрирован.')
-                await state.set_state(RegistrationForm.change_nickname)
-            else:
-                # Обновление никнейма в базе данных
-                cursor.execute("UPDATE users SET username = %s, updated_at = %s WHERE id = %s", (new_nickname, datetime.now(), message.from_user.id))
-                connection.commit()
-                await message.answer(
-                    f'Ваш никнейм изменён на: {new_nickname}',
-                    reply_markup=get_main_keyboard()
-                )
-                await state.clear()
-        else:
-            await message.reply('Никнейм не валиден. Пожалуйста, попробуйте снова.')
-            await state.set_state(RegistrationForm.change_nickname)
-    except Exception as e:
-        logger.error(f'Произошла ошибка при изменении никнейма: {e}')
-
-
-@router.message(F.text == 'Изменить пароль')
+@router.message(F.text == '🔒 Изменить пароль')
 async def change_password_callback(message: Message, state: FSMContext):
     """Обработка изменения пароля"""
     try:
@@ -165,10 +118,10 @@ async def change_password_callback(message: Message, state: FSMContext):
         count = cursor.fetchone()[0]
 
         if count != 0:
-            await message.answer('Введите новый пароль:')
+            await message.answer('🔒 Введите новый пароль:')
             await state.set_state(RegistrationForm.change_password)
         else:
-            await message.answer('Вы не зарегистрированы.', reply_markup=get_main_keyboard())
+            await message.answer('⚠️ Вы не зарегистрированы.', reply_markup=get_main_keyboard())
     except Exception as e:
         logger.error(f'Произошла ошибка: {e}')
 
@@ -186,7 +139,7 @@ async def handle_change_password(message: Message, state: FSMContext):
         cursor.execute("UPDATE users SET password = %s, updated_at = %s WHERE id = %s", (hashed_password, datetime.now(), message.from_user.id))
         connection.commit()
         await message.answer(
-            f'Ваш пароль изменён.',
+            f'✅ Ваш пароль изменён.',
             reply_markup=get_main_keyboard()
         )
         await state.clear()
