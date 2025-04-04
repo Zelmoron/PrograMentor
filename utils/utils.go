@@ -13,7 +13,7 @@ import (
 func GenerateJWT(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": strconv.FormatInt(userID, 10),
-		"exp": time.Now().Add(time.Minute * 15).Unix(),
+		"exp": time.Now().Add(time.Second * 15).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -23,7 +23,7 @@ func GenerateJWT(userID int64) (string, error) {
 func GenerateRefreshToken(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": strconv.FormatInt(userID, 10),
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"exp": time.Now().Add(time.Second * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

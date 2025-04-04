@@ -15,6 +15,22 @@ services:
     networks:
       - mynetwork
 
+  app:
+    build: .
+    environment:
+      - APP_VERSION=V0.0
+      - DB_CONNECTION=host=postgres_db port=5432 user=user dbname=mydatabase password=password sslmode=disable
+      - JWT_SECRET=SECRET
+      - REFRESH_SECRET=RSECRET
+
+
+    depends_on:
+      - db
+    networks:
+      - mynetwork
+    ports:
+      - "8080:8080"
+
 volumes:
   postgres_data:
 
