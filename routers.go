@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
 
 	"main/handlers"
-	"main/utils"
 )
 
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
@@ -20,13 +18,5 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	api.Post("/refresh-token", out.RefreshToken)
 
 	protected := api.Group("/protected", handlers.JWT())
-	protected.Get("/", func(c *fiber.Ctx) error {
-		token := c.Get("Authorization")
-		tokenString := token[len("Bearer "):]
-		userID, _ := utils.ValidateJWT(tokenString, os.Getenv("JWT_SECRET"))
-
-		return c.JSON(fiber.Map{
-			"message": fmt.Sprintf("User ID: %d", userID),
-		})
-	})
+	protected.Post("/check-code", out.CheckCode)
 }
