@@ -151,15 +151,7 @@ func (out *OutHandlers) RefreshToken(c *fiber.Ctx) error {
 }
 
 func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
-	token := c.Get("Authorization")
-	if token == "" {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Authorization token missing",
-		})
-	}
-
-	tokenString := token[len("Bearer "):]
-	userID, err := utils.ValidateJWT(tokenString, os.Getenv("JWT_SECRET"))
+	userID, err := utils.ValidateJWT(c.Cookies("accessToken"), os.Getenv("JWT_SECRET"))
 	if err != nil {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Invalid token",
