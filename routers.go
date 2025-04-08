@@ -13,10 +13,6 @@ import (
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(
-			fiber.Map{
-				"message": "Welcome to the API",
-				"version": os.Getenv("APP_VERSION"),
-			},
 			os.Getenv("APP_VERSION"))
 	})
 
