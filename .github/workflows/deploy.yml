@@ -24,3 +24,4 @@ jobs:
             cd /home/igor/gobackend/PrograMentor && git pull origin main
             /snap/bin/docker compose down
             /snap/bin/docker compose up -d --build
+            go run .  
