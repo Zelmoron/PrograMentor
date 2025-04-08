@@ -23,12 +23,12 @@ func main() {
 
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://26.199.2.128:3000",
-		AllowMethods:     "GET,POST,PUT,DELETE",
+		AllowOrigins:     "http://127.0.0.1:5500,http://localhost:8080,http://host.docker.internal:8080",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
-		ExposeHeaders:    "SKFJBhjfk",
 	}))
+
 	app.Use(logger.New())
 	initRoutes(app, inHandler, outHandler)
 
