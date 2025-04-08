@@ -27,7 +27,7 @@ jobs:
             export REFRESH_SECRET=RSECRET
             
             cd /home/igor/gobackend/PrograMentor && git pull origin main
-            pkill -f "go run ."
+            fuser -k 8080/tcp
             /snap/bin/docker compose down
             /snap/bin/docker compose up -d --build
             /usr/local/go/bin/go run .
