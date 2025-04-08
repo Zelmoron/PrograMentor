@@ -30,5 +30,5 @@ jobs:
             fuser -k 8080/tcp
             /snap/bin/docker compose down
             /snap/bin/docker compose up -d --build
-            nohup /usr/local/go/bin/go run . > myapp.log 2>&1 & disown
+            screen -dmS my_session_name /usr/local/go/bin/go run .
             exit 0
