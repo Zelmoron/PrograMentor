@@ -1,11 +1,9 @@
 package handlers
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/gofiber/fiber/v2"
 
 	"main/services"
 	"main/utils"
@@ -49,23 +47,7 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 			"message": "Failed to save refresh token",
 		})
 	}
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 100),
-		HTTPOnly: false,
-		Secure:   false,
-		SameSite: "None",
-	})
-
-	//c.Cookie(&fiber.Cookie{
-	//	Name:     "refreshToken",
-	//	Value:    refreshToken,
-	//	Expires:  time.Now().Add(time.Hour * 100 * 100),
-	//	HTTPOnly: true,
-	//	Secure:   false,
-	//	SameSite: "Lax",
-	//})
+	//TODO сделай привязку по IP к рефреш и протсо отдай его в ответе
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Logged in successfully",
@@ -73,22 +55,8 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 }
 
 func (out *OutHandlers) LoginOut(c *fiber.Ctx) error {
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    "",
-		HTTPOnly: false,
-		Secure:   false,
-		SameSite: "None",
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "refreshToken",
-		Value:    "",
-		HTTPOnly: true,
-		Secure:   false,
-		SameSite: "None",
-	})
-
+	//TODO тебе не нужно здесь ничего чистить - на фронте альберт почистит localstorage и ему булет нечего отправить
+	//Let do it
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -126,22 +94,6 @@ func (out *OutHandlers) RefreshToken(c *fiber.Ctx) error {
 			"message": "Failed to update refresh token in the database",
 		})
 	}
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    newAccessToken,
-		HTTPOnly: false,
-		Secure:   true,
-		SameSite: "Strict",
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "refreshToken",
-		Value:    updatedRefreshToken,
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "Strict",
-	})
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Tokens refreshed successfully",
