@@ -9,7 +9,10 @@ import (
 )
 
 func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandlers) {
-	app.Get("/", func(c *fiber.Ctx) error { return c.JSON(os.Getenv("APP_VERSION")) })
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON(
+			os.Getenv("APP_VERSION"))
+	})
 
 	// Без аутентификации
 	api := app.Group("")
