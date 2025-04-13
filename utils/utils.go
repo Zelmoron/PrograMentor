@@ -12,7 +12,7 @@ import (
 func GenerateJWT(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": strconv.FormatInt(userID, 10),
-		"exp": time.Now().Add(time.Second * 40).Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

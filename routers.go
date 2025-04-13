@@ -19,8 +19,6 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	api.Post("/auth", in.Login)
 
 	protected := api.Group("/protected", handlers.JWT())
-	protected.Get("/test", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+
 	protected.Post("/check-code", out.CheckCode)
 }
