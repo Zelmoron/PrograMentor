@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -50,24 +49,10 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 			"message": "Failed to save refresh token",
 		})
 	}
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 100),
-		HTTPOnly: false,
-		Domain:   ".ngrok-free.app",
-		Secure:   false,
-		SameSite: "None",
-	})
 
-	//c.Cookie(&fiber.Cookie{
-	//	Name:     "refreshToken",
-	//	Value:    refreshToken,
-	//	Expires:  time.Now().Add(time.Hour * 100 * 100),
-	//	HTTPOnly: true,
-	//	Secure:   false,
-	//	SameSite: "Lax",
-	//})
+	c.Locals("userID", user.ID)
+
+	//TODO сделай привязку по IP к рефреш и протсо отдай его в ответе
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Logged in successfully",
@@ -75,22 +60,8 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 }
 
 func (out *OutHandlers) LoginOut(c *fiber.Ctx) error {
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    "",
-		HTTPOnly: false,
-		Secure:   false,
-		SameSite: "None",
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "refreshToken",
-		Value:    "",
-		HTTPOnly: true,
-		Secure:   false,
-		SameSite: "None",
-	})
-
+	//TODO тебе не нужно здесь ничего чистить - на фронте альберт почистит localstorage и ему булет нечего отправить
+	//Let do it
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -129,34 +100,13 @@ func (out *OutHandlers) RefreshToken(c *fiber.Ctx) error {
 		})
 	}
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "accessToken",
-		Value:    newAccessToken,
-		HTTPOnly: false,
-		Secure:   true,
-		SameSite: "Strict",
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "refreshToken",
-		Value:    updatedRefreshToken,
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "Strict",
-	})
-
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Tokens refreshed successfully",
 	})
 }
 
 func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
-	userID, err := utils.ValidateJWT(c.Cookies("accessToken"), os.Getenv("JWT_SECRET"))
-	if err != nil {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid token",
-		})
-	}
+	userID, _ := c.Locals("userID").(int)
 
 	var requestBody struct {
 		Code string `json:"code"`
@@ -168,24 +118,14 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	dir := "./codes"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	filePath, err := services.SaveUserCode(userID, requestBody.Code)
+	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Could not create code directory",
-		})
-	}
-
-	filePath := fmt.Sprintf("%s/%d.go", dir, userID)
-
-	if err := os.WriteFile(filePath, []byte(requestBody.Code), os.ModePerm); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to save code to file",
+			"message": err.Error(),
 		})
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
-		"file":    filePath,
+		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID)
 	})
 }
