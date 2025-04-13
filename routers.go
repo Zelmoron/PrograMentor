@@ -17,9 +17,10 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	// Без аутентификации
 	api := app.Group("")
 	api.Post("/auth", in.Login)
-	api.Post("/logout", out.LoginOut)
-	api.Post("/refresh-token", out.RefreshToken)
 
 	protected := api.Group("/protected", handlers.JWT())
+	protected.Get("/test", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
 	protected.Post("/check-code", out.CheckCode)
 }
