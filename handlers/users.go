@@ -37,6 +37,8 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	c.Locals("userID", user.ID)
+
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"access": token,
 	})
