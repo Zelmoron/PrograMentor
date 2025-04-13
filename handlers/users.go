@@ -64,6 +64,7 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
+	//TODO Переход к сервису, который будет создавать докер
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
 	})
