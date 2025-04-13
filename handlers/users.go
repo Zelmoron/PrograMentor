@@ -1,6 +1,8 @@
 package handlers
 
 import (
+
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"os"
@@ -97,5 +99,45 @@ func (out *OutHandlers) RefreshToken(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Tokens refreshed successfully",
+	})
+}
+
+func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
+	userID, err := utils.ValidateJWT(c.Cookies("accessToken"), os.Getenv("JWT_SECRET"))
+	if err != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid token",
+		})
+	}
+
+	var requestBody struct {
+		Code string `json:"code"`
+	}
+
+	if err := c.BodyParser(&requestBody); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "Request parsing error",
+		})
+	}
+
+	dir := "./codes"
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Could not create code directory",
+		})
+	}
+
+	filePath := fmt.Sprintf("%s/%d.go", dir, userID)
+
+	if err := os.WriteFile(filePath, []byte(requestBody.Code), os.ModePerm); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to save code to file",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
+		"file":    filePath,
 	})
 }
