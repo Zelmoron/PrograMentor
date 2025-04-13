@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"os"
 
@@ -22,13 +21,7 @@ func main() {
 	inHandler := handlers.NewInHandlers(repos, user)
 
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://26.199.2.128:3000",
-		AllowMethods:     "GET,POST,PUT,DELETE",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowCredentials: true,
-		ExposeHeaders:    "SKFJBhjfk",
-	}))
+
 	app.Use(logger.New())
 	initRoutes(app, inHandler, outHandler)
 

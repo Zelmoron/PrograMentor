@@ -1,11 +1,16 @@
 package handlers
 
 import (
+
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"os"
+<<<<<<< HEAD
 
 	"github.com/gofiber/fiber/v2"
+=======
+>>>>>>> f5937257fdca02072d4735e09ae72c074697abb3
 
 	"main/services"
 	"main/utils"
@@ -49,9 +54,12 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 			"message": "Failed to save refresh token",
 		})
 	}
+<<<<<<< HEAD
 
 	c.Locals("userID", user.ID)
 
+=======
+>>>>>>> f5937257fdca02072d4735e09ae72c074697abb3
 	//TODO сделай привязку по IP к рефреш и протсо отдай его в ответе
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{

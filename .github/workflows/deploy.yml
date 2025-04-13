@@ -21,6 +21,14 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
+            export APP_VERSION=V0.0
+            export DB_CONNECTION="host=172.18.0.2  port=5432 user=user dbname=mydatabase password=password sslmode=disable"
+            export JWT_SECRET=SECRET
+            export REFRESH_SECRET=RSECRET
+            
             cd /home/igor/gobackend/PrograMentor && git pull origin main
+            fuser -k 8080/tcp
             /snap/bin/docker compose down
             /snap/bin/docker compose up -d --build
+            screen -dmS my_session_name /usr/local/go/bin/go run .
+            exit 0
