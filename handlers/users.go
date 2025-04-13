@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -58,7 +57,7 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	filePath, err := services.SaveUserCode(userID, requestBody.Code)
+	err := services.SaveUserCode(userID, requestBody.Code)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -66,6 +65,6 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID)
+		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
 	})
 }
