@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"net/http"
-	"os"
+
+	"github.com/gofiber/fiber/v2"
 
 	"main/services"
 	"main/utils"
@@ -36,6 +36,8 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	c.Locals("userID", user.ID)
+
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"access": token,
 	})
@@ -43,12 +45,7 @@ func (in *InHandlers) Login(c *fiber.Ctx) error {
 }
 
 func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
-	userID, err := utils.ValidateJWT(c.Cookies("accessToken"), os.Getenv("JWT_SECRET"))
-	if err != nil {
-		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid token",
-		})
-	}
+	userID, _ := c.Locals("userID").(int)
 
 	var requestBody struct {
 		Code string `json:"code"`
@@ -60,24 +57,14 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	dir := "./codes"
-
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	err := services.SaveUserCode(userID, requestBody.Code)
+	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Could not create code directory",
-		})
-	}
-
-	filePath := fmt.Sprintf("%s/%d.go", dir, userID)
-
-	if err := os.WriteFile(filePath, []byte(requestBody.Code), os.ModePerm); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to save code to file",
+			"message": err.Error(),
 		})
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
-		"file":    filePath,
 	})
 }
