@@ -27,8 +27,5 @@ jobs:
             export REFRESH_SECRET=RSECRET
             
             cd /home/igor/gobackend/PrograMentor && git pull origin main
-            fuser -k 8080/tcp
             /snap/bin/docker compose down
             /snap/bin/docker compose up -d --build
-            screen -dmS my_session_name /usr/local/go/bin/go run .
-            exit 0
