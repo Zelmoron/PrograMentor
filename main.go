@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"os"
 
@@ -23,6 +24,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(logger.New())
+	app.Use(cors.New())
 	initRoutes(app, inHandler, outHandler)
 
 	if err := app.Listen(":8080"); err != nil {
