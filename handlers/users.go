@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"fmt"
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -57,7 +58,7 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	err := services.SaveUserCode(userID, requestBody.Code)
+	filePath, err := services.SaveUserCode(userID, requestBody.Code)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -65,7 +66,32 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 	}
 
 	//TODO Переход к сервису, который будет создавать докер
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": fmt.Sprintf("Code for user ID %d saved successfully", userID),
+	logs := make(chan string)
+	errChan := make(chan error)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	go services.StartUserCode(ctx, logs, errChan, filePath)
+
+	select {
+	case log := <-logs:
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"message": log,
+		})
+	case err := <-errChan:
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	case <-ctx.Done():
+		if ctx.Err() == context.DeadlineExceeded {
+			return c.Status(http.StatusRequestTimeout).JSON(fiber.Map{
+				"message": "Error: Waiting time finally exceeded",
+			})
+		}
+	}
+
+	return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		"message": "Unknown error",
 	})
 }
