@@ -38,13 +38,13 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: "golang:latest",
-		Cmd:   []string{"go", "run", "/code/code.go"},
+		Cmd:   []string{"go", "run", filePath},
 	}, &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
 				Source: filePath,
-				Target: "/code/code.go",
+				Target: filePath,
 			},
 		},
 	}, nil, nil, "")
