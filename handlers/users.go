@@ -1,16 +1,10 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 	"github.com/gofiber/fiber/v2"
 
 	"main/services"
@@ -64,7 +58,7 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	err := services.SaveUserCode(userID, requestBody.Code)
+	filePath, err := services.SaveUserCode(userID, requestBody.Code)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -72,71 +66,32 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 	}
 
 	//TODO Переход к сервису, который будет создавать докер
+	logs := make(chan string)
+	errChan := make(chan error)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.41"))
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
-	}
-
-	filename := fmt.Sprintf("./codes/%d.go", userID)
-	defer os.Remove(filename)
-
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "golang:latest",
-		Cmd:   []string{"go", "run", "/code/code.go"},
-	}, &container.HostConfig{
-		Mounts: []mount.Mount{
-			{
-				Type:   mount.TypeBind,
-				Source: filename,
-				Target: "/code/code.go",
-			},
-		},
-	}, nil, nil, "")
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
-	}
-
-	statusCh, erCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	go services.StartUserCode(ctx, logs, errChan, filePath)
 
 	select {
-	case err := <-erCh:
-		if err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-				"message": err.Error(),
-			})
-		}
-	case <-statusCh:
-	}
-
-	logs, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
-	if err != nil {
+	case log := <-logs:
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"message": log,
+		})
+	case err := <-errChan:
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
 		})
+	case <-ctx.Done():
+		if ctx.Err() == context.DeadlineExceeded {
+			return c.Status(http.StatusRequestTimeout).JSON(fiber.Map{
+				"message": "Error: Waiting time finally exceeded",
+			})
+		}
 	}
 
-	var buf bytes.Buffer
-	buf.ReadFrom(logs)
-
-	if err := cli.ContainerStop(ctx, resp.ID, container.StopOptions{}); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to stop container",
-		})
-	}
-	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{}); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to remove container",
-		})
-	}
-
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": buf.String(),
+	return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+		"message": "Unknown error",
 	})
 }
