@@ -37,29 +37,25 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 	}
 	defer os.Remove(filePath)
 
-	// Получаем абсолютный путь к файлу
 	absFilePath, err := filepath.Abs(filePath)
 	if err != nil {
 		errChan <- fmt.Errorf("failed to get absolute path: %w", err)
 		return
 	}
 
-	// Получаем абсолютный путь к директории с файлом
 	sourceDir := filepath.Dir(absFilePath)
 
-	// Абсолютный путь назначения внутри контейнера
 	targetPath := "/tmp/codes/" + filepath.Base(filePath)
 
-	// Создаем контейнер
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "golang:latest",                   // Используем golang:latest
-		Cmd:   []string{"go", "run", targetPath}, // Путь внутри контейнера
+		Image: "golang:latest",
+		Cmd:   []string{"go", "run", targetPath},
 	}, &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: sourceDir,    // Абсолютный путь на хосте
-				Target: "/tmp/codes", // Абсолютный путь внутри контейнера
+				Source: sourceDir,
+				Target: "/tmp/codes",
 			},
 		},
 	}, nil, nil, "")
@@ -68,13 +64,11 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 		return
 	}
 
-	// Запускаем контейнер
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		errChan <- err
 		return
 	}
 
-	// Читаем логи контейнера
 	logReader, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		errChan <- err
@@ -90,7 +84,6 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 
 	logs <- buf.String()
 
-	// Удаляем контейнер после выполнения
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		errChan <- err
 		return
