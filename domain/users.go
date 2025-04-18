@@ -8,7 +8,6 @@ type Users struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-type RefreshToken struct {
-	Token  string `json:"token"`
-	UserID int64  `json:"user_id"`
+type GolangTheory struct {
+	ID int64 `json:"user_id"`
 }
