@@ -46,7 +46,7 @@ func (repo *Repo) Migrate() {
 
 	if err := repo.db.AutoMigrate(
 		&domain.Users{},
-		&domain.RefreshToken{},
+		&domain.GolangTheory{},
 	); err != nil {
 		panic(err)
 	}
