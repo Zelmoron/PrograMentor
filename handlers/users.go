@@ -65,7 +65,6 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 		})
 	}
 
-	//TODO Переход к сервису, который будет создавать докер
 	logs := make(chan string)
 	errChan := make(chan error)
 
