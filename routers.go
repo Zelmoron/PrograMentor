@@ -21,5 +21,5 @@ func initRoutes(app *fiber.App, in *handlers.InHandlers, out *handlers.OutHandle
 	protected := api.Group("/protected", handlers.JWT())
 
 	protected.Post("/check-code", out.CheckCode)
-	//TODO добавить пагинацию
+	//TODO добавить пагинацию fuf
 }
