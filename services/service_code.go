@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -81,7 +82,9 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 		errChan <- err
 		return
 	}
+
 	fmt.Println(buf.String())
+	log.Println(buf.String())
 	logs <- buf.String()
 
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {

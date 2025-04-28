@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -75,6 +76,7 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 
 	select {
 	case log := <-logs:
+		fmt.Println(log)
 		return c.Status(http.StatusOK).JSON(fiber.Map{
 			"message": log,
 		})
