@@ -36,7 +36,11 @@ services:
       DB_CONNECTION: "host=db port=5432 user=user dbname=mydatabase password=password sslmode=disable"
       JWT_SECRET: SECRET
       REFRESH_SECRET: RSECRET
+      HOST_CODE_PATH: ${HOST_CODE_PATH:-./codes}
     restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./codes:/codes
 
 volumes:
   postgres_data:

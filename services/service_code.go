@@ -15,7 +15,7 @@ import (
 )
 
 func SaveUserCode(userID int, code string) (string, error) {
-	dir := "./codes"
+	dir := "/codes"
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("could not create code directory: %w", err)
@@ -38,24 +38,23 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 	}
 	defer os.Remove(filePath)
 
-	absFilePath, err := filepath.Abs(filePath)
-	if err != nil {
-		errChan <- fmt.Errorf("failed to get absolute path: %w", err)
+	hostCodePath := os.Getenv("HOST_CODE_PATH")
+	if hostCodePath == "" {
+		errChan <- fmt.Errorf("HOST_CODE_PATH is not set")
 		return
 	}
+	fmt.Println(filePath)
 
-	sourceDir := filepath.Dir(absFilePath)
-
-	targetPath := "/tmp/codes/" + filepath.Base(filePath)
+	fileName := filepath.Base(filePath)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: "golang:latest",
-		Cmd:   []string{"go", "run", targetPath},
+		Cmd:   []string{"go", "run", "/tmp/codes/" + fileName},
 	}, &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: sourceDir,
+				Source: hostCodePath,
 				Target: "/tmp/codes",
 			},
 		},

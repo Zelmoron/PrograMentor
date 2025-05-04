@@ -1,18 +1,17 @@
-# Используем официальный образ Go
 FROM golang:1.23.4-alpine
 
-# Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
 
-# Копируем файлы приложения в контейнер
+# Установка нужных пакетов и docker CLI
+RUN apk add --no-cache bash curl tar
+RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz | \
+    tar -xzvf - --strip-components=1 -C /usr/local/bin docker/docker
+
 COPY . .
 
-# Собираем приложение
 RUN go mod tidy
 RUN go build -o main .
 
-# Указываем, что будет слушать контейнер на порту 8080
 EXPOSE 8080
 
-# Запускаем приложение
 CMD ["./main"]
