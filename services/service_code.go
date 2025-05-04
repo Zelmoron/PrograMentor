@@ -43,7 +43,6 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 		errChan <- fmt.Errorf("HOST_CODE_PATH is not set")
 		return
 	}
-	fmt.Println(filePath)
 
 	fileName := filepath.Base(filePath)
 
