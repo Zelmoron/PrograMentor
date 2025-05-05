@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
+	"github.com/docker/docker/pkg/stdcopy"
 	"log"
 	"os"
 	"path/filepath"
@@ -68,22 +68,73 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 		return
 	}
 
-	logReader, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
+	// Fix 1: Use proper log reader handling
+	logReader, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
 	if err != nil {
 		errChan <- err
 		return
 	}
 	defer logReader.Close()
 
-	var buf bytes.Buffer
-	if _, err = io.Copy(&buf, logReader); err != nil {
-		errChan <- err
-		return
+	// Fix 2: Use the proper Docker log reader which handles headers
+	output := make(chan string)
+	go func() {
+		// Use docker-specific stdout/stderr multiplexing reader
+		stdcopy.StdCopy(os.Stdout, os.Stderr, logReader)
+
+		// Collect logs separately for the channel
+		logReader.Close()
+		newLogReader, _ := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{
+			ShowStdout: true,
+			ShowStderr: true,
+			Follow:     false,
+		})
+		defer newLogReader.Close()
+
+		// Use proper header handling
+		var stdoutBuf, stderrBuf bytes.Buffer
+		_, err := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, newLogReader)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		// Combine stdout and stderr
+		var combinedOutput string
+		if stdoutBuf.Len() > 0 {
+			combinedOutput += stdoutBuf.String()
+		}
+		if stderrBuf.Len() > 0 {
+			if len(combinedOutput) > 0 {
+				combinedOutput += "\n"
+			}
+			combinedOutput += stderrBuf.String()
+		}
+
+		output <- combinedOutput
+	}()
+
+	// Wait for the container to finish
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			errChan <- err
+			return
+		}
+	case <-statusCh:
+		// Container finished
 	}
 
-	fmt.Println(buf.String())
-	log.Println(buf.String())
-	logs <- buf.String()
+	// Get the output
+	result := <-output
+	fmt.Println("Output:", result)
+	log.Println("Output:", result)
+	logs <- result
 
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		errChan <- err
