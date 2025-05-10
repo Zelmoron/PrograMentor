@@ -13,6 +13,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
       interval: 5s
