@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/docker/pkg/stdcopy"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -130,14 +129,12 @@ func StartUserCode(ctx context.Context, logs chan string, errChan chan error, fi
 		// Container finished
 	}
 
-	// Get the output
-	result := <-output
-	fmt.Println("Output:", result)
-	log.Println("Output:", result)
-	logs <- result
-
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		errChan <- err
 		return
 	}
+
+	result := <-output
+	logs <- result
+
 }
