@@ -46,6 +46,20 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./codes:/codes
 
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: telegram_bot
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mynetwork
+    environment:
+      DB_CONNECTION: "host=db port=5432 user=user dbname=mydatabase password=password sslmode=disable"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 
