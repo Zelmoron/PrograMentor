@@ -96,8 +96,8 @@ async def handle_password(message: Message, state: FSMContext):
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         # Добавление пользователя в базу данных
-        cursor.execute("INSERT INTO users (id, username, password) VALUES (%s, %s, %s)", 
-                       (message.from_user.id, nickname, hashed_password))
+        cursor.execute("INSERT INTO users (id, username, password, created_at) VALUES (%s, %s, %s, %s)", 
+                       (message.from_user.id, nickname, hashed_password, datetime.now()))
         connection.commit()
 
         await message.reply(
