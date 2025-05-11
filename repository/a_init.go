@@ -11,8 +11,9 @@ import (
 )
 
 type Repo struct {
-	db        *gorm.DB
-	UsersRepo *UsersRepo
+	db          *gorm.DB
+	UsersRepo   *UsersRepo
+	LessonsRepo *LessonsRepo
 }
 
 func InitRepo(connectionString string) *Repo {
@@ -37,8 +38,9 @@ func InitRepo(connectionString string) *Repo {
 	fmt.Printf("Repository stats: %+v", sqlDB.Stats())
 
 	return &Repo{
-		db:        db,
-		UsersRepo: NewUsersRepo(db),
+		db:          db,
+		UsersRepo:   NewUsersRepo(db),
+		LessonsRepo: NewLessonsRepo(db),
 	}
 }
 
@@ -46,7 +48,7 @@ func (repo *Repo) Migrate() {
 
 	if err := repo.db.AutoMigrate(
 		&domain.Users{},
-		&domain.GolangTheory{},
+		&domain.Lessons{},
 	); err != nil {
 		panic(err)
 	}

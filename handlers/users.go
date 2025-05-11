@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"context"
-	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 
 	"main/services"
 	"main/utils"
@@ -91,5 +92,35 @@ func (out *OutHandlers) CheckCode(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 		"message": "Unknown error",
+	})
+}
+
+func (out *OutHandlers) GetPage(c *fiber.Ctx) error {
+	lessonID := c.Params("lessonID")
+	if lessonID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "Missing lesson identifier",
+		})
+	}
+
+	lesson, err := out.repos.LessonsRepo.GetLessonByID(lessonID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to retrieve lesson content",
+		})
+	}
+
+	totalPages, err := out.repos.LessonsRepo.GetTotalLessonsCount()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get total pages count",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"title":       lesson.LessonTitle,
+		"content":     lesson.Content,
+		"examples":    lesson.Examples,
+		"total_pages": totalPages,
 	})
 }
