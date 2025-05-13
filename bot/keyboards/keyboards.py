@@ -3,8 +3,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def get_main_keyboard():
     """Создание клавиатуры из трёх кнопок: регисрация, смена пароля"""
-    register_button = KeyboardButton(text='📝 Зарегистрироваться')
-    change_password_button = KeyboardButton(text='🔒 Изменить пароль')
+    register_button = KeyboardButton(text='📝 Register')
+    change_password_button = KeyboardButton(text='🔒 Change Password')
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
