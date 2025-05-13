@@ -11,7 +11,6 @@ import hashlib
 
 router = Router()
 
-# Устанавливаем соединение с базой данных
 connection, cursor = setup_database_connection()
 
 class RegistrationForm(StatesGroup):
